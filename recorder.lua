@@ -1,3 +1,12 @@
+local workspace_service = game.Workspace
+local player = game.Players.LocalPlayer
+local core_gui = game.CoreGui
+
+local cooldown_duration = 10
+local last_upgrade_time = tick()
+local tower_connections = {}
+local file_name = "strat.txt"
+
 local screen_gui = Instance.new("ScreenGui", core_gui)
 screen_gui.Name = "strat_recorder_ui"
 
