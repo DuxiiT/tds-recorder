@@ -1,6 +1,7 @@
 local workspace_service = game:GetService("Workspace")
-local player_service = game:GetService("Players").LocalPlayer
-local core_gui = game:GetService("CoreGui")
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local player_gui = player:WaitForChild("PlayerGui")
 local user_input_service = game:GetService("UserInputService")
 
 local file_name = "Strat.txt"
@@ -9,13 +10,14 @@ local last_action_time = tick()
 local towers_list = {} 
 _G.record_strat = false
 
-local screen_gui = Instance.new("ScreenGui", core_gui)
+local screen_gui = Instance.new("ScreenGui")
 screen_gui.Name = "strat_recorder_ui"
 screen_gui.ResetOnSpawn = false
+screen_gui.Parent = player_gui
 
 local main_frame = Instance.new("Frame", screen_gui)
 main_frame.Name = "main_frame"
-main_frame.Size = UDim2.new(0.3, 0, 0.4, 0)
+main_frame.Size = UDim2.new(0, 300, 0, 400)
 main_frame.Position = UDim2.new(0.35, 0, 0.3, 0)
 main_frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 main_frame.Active = true
@@ -58,23 +60,23 @@ end)
 
 local title_label = Instance.new("TextLabel", main_frame)
 title_label.Name = "title_label"
-title_label.Size = UDim2.new(1, -50, 0.1, 0)
+title_label.Size = UDim2.new(1, -50, 0, 30)
 title_label.Position = UDim2.new(0, 10, 0, 5)
 title_label.Text = "Strat Recorder"
 title_label.TextColor3 = Color3.new(1, 1, 1)
 title_label.BackgroundTransparency = 1
 title_label.Font = Enum.Font.GothamBold
-title_label.TextScaled = true
+title_label.TextSize = 18
 title_label.TextXAlignment = Enum.TextXAlignment.Left
 
 local close_btn = Instance.new("TextButton", main_frame)
 close_btn.Name = "close_btn"
-close_btn.Size = UDim2.new(0.1, 0, 0.1, 0)
+close_btn.Size = UDim2.new(0, 30, 0, 30)
 close_btn.Position = UDim2.new(1, -35, 0, 5)
 close_btn.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
 close_btn.Text = "×"
 close_btn.TextColor3 = Color3.fromRGB(255, 100, 100)
-close_btn.TextScaled = true
+close_btn.TextSize = 20
 Instance.new("UICorner", close_btn)
 
 local log_box = Instance.new("ScrollingFrame", main_frame)
@@ -90,8 +92,8 @@ log_layout.Padding = UDim.new(0, 2)
 
 local start_btn = Instance.new("TextButton", main_frame)
 start_btn.Name = "start_btn"
-start_btn.Size = UDim2.new(0.42, 0, 0.15, 0)
-start_btn.Position = UDim2.new(0.05, 0, 0.8, 0)
+start_btn.Size = UDim2.new(0.42, 0, 0.12, 0)
+start_btn.Position = UDim2.new(0.05, 0, 0.82, 0)
 start_btn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
 start_btn.Text = "START"
 start_btn.Font = Enum.Font.GothamBold
@@ -101,8 +103,8 @@ Instance.new("UICorner", start_btn)
 
 local stop_btn = Instance.new("TextButton", main_frame)
 stop_btn.Name = "stop_btn"
-stop_btn.Size = UDim2.new(0.42, 0, 0.15, 0)
-stop_btn.Position = UDim2.new(0.53, 0, 0.8, 0)
+stop_btn.Size = UDim2.new(0.42, 0, 0.12, 0)
+stop_btn.Position = UDim2.new(0.53, 0, 0.82, 0)
 stop_btn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
 stop_btn.Text = "STOP"
 stop_btn.Font = Enum.Font.GothamBold
@@ -150,47 +152,117 @@ old_namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
     local args = {...}
     
-    pcall(function()
-        if _G.record_strat and (method == "InvokeServer" or method == "FireServer") then
-            local action_name = tostring(args[2]) 
+    if _G.record_strat and (method == "InvokeServer" or method == "FireServer") then
+        local action_name = tostring(args[2]) 
 
-            -- place
-            if action_name:find("Pl") and action_name:find("ce") then
-                local tower_type = tostring(args[4])
-                local place_data = args[3]
-                
-                if type(place_data) == "table" and place_data.Position then
-                    local pos = place_data.Position
-                    local cmd = string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", tower_type, pos.X, pos.Y, pos.Z)
-                    record_action(cmd)
-                    add_log("placed: " .. tower_type)
-                end
+        -- PLACE
+        if action_name:find("Pl") and action_name:find("ce") then
+            local tower_type = tostring(args[4])
+            local place_data = args[3]
+            
+            if type(place_data) == "table" and place_data.Position then
+                local pos = place_data.Position
+                record_action(string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", tower_type, pos.X, pos.Y, pos.Z))
+                task.spawn(function() add_log("placed: " .. tower_type) end)
+            end
 
-            -- upgrade
-            elseif action_name == "Upgrade" then
-                local action_data = args[4]
-                if action_data and action_data.Troop then
-                    local tower_id = towers_list[action_data.Troop]
-                    if tower_id then
-                        record_action(string.format("TDS:Upgrade(%d)", tower_id))
-                        add_log("upgraded: " .. tostring(tower_id))
-                    end
-                end
-
-            -- sesll
-            elseif action_name == "Sell" then
-                local action_data = args[3]
-                if action_data and action_data.Troop then
-                    local tower_id = towers_list[action_data.Troop]
-                    if tower_id then
-                        record_action(string.format("TDS:Sell(%d)", tower_id))
-                        add_log("sold: " .. tostring(tower_id))
-                        towers_list[action_data.Troop] = nil 
-                    end
+        -- UPGRADE
+        elseif action_name == "Upgrade" then
+            local action_data = args[4]
+            if action_data and action_data.Troop then
+                local tower_id = towers_list[action_data.Troop]
+                if tower_id then
+                    record_action(string.format("TDS:Upgrade(%d)", tower_id))
+                    task.spawn(function() add_log("upgraded: " .. tostring(tower_id)) end)
                 end
             end
+
+        -- SELL
+        elseif action_name == "Sell" then
+            local action_data = args[3]
+            if action_data and action_data.Troop then
+                local tower_id = towers_list[action_data.Troop]
+                if tower_id then
+                    record_action(string.format("TDS:Sell(%d)", tower_id))
+                    task.spawn(function() 
+                        add_log("sold: " .. tostring(tower_id))
+                        towers_list[action_data.Troop] = nil 
+                    end)
+                end
+            end
+
+        -- ABILITIES
+        elseif action_name == "Abilities" then
+            local action_data = args[4]
+            if action_data and type(action_data) == "table" then
+                local ability_name = action_data.Name or "Unknown"
+                local troop_instance = action_data.Troop
+                local tower_id = towers_list[troop_instance] or "Unknown"
+                
+                local data_table = action_data.Data or {}
+                local formatted_data = "{"
+                for k, v in pairs(data_table) do
+                    formatted_data = formatted_data .. string.format("[%s] = %s, ", tostring(k), tostring(v))
+                end
+                formatted_data = formatted_data:gsub(", $", "") .. "}"
+
+                record_action(string.format("TDS:Ability(%s, \"%s\", %s)", 
+                    tostring(tower_id), 
+                    ability_name, 
+                    formatted_data
+                ))
+
+                task.spawn(function()
+                    add_log(string.format("Ability: %s (ID %s)", ability_name, tostring(tower_id)))
+                end)
+            end
+
+        -- TARGET
+        elseif action_name == "Target" then
+            local action_data = args[4]
+            print("asgas")
+            
+            if type(action_data) == "table" and action_data.Target then
+                local target_value = tostring(action_data.Target)
+                local troop_instance = action_data.Troop
+                local tower_id = towers_list[troop_instance] or "Unknown"
+
+                record_action(string.format("TDS:SetTarget(%s, \"%s\")", 
+                    tostring(tower_id), 
+                    target_value
+                ))
+
+                task.spawn(function()
+                    add_log(string.format("set targeting: tower %s to %s", tostring(tower_id), target_value))
+                end)
+            end
+
+        -- OPTION
+        elseif action_name == "Option" or action_name == "Target" then
+            local action_data = args[4]
+            
+            if type(action_data) == "table" and action_data.Troop then
+                local tower_id = towers_list[action_data.Troop] or "Unknown"
+                
+                local primary_val = action_data.Value or action_data.Target or "Unknown"
+                local opt_name = action_data.Name or "Targeting"
+
+                record_action(string.format("TDS:SetOption(%s, \"%s\", \"%s\")", 
+                    tostring(tower_id), 
+                    tostring(opt_name), 
+                    tostring(primary_val)
+                ))
+
+                task.spawn(function()
+                    add_log(string.format("set option: tower %s value %s to %s", tostring(tower_id), opt_name, primary_val))
+                end)
+            end
+
+        elseif action_name == "Skip" then
+            record_action(string.format("TDS:VoteSkip()", tower_id))
+            task.spawn(function() add_log("skipped wave: " .. tostring(tower_id)) end)
         end
-    end)
+    end
 
     return old_namecall(self, ...)
 end)
@@ -207,7 +279,7 @@ start_btn.MouseButton1Click:Connect(function()
     
     add_log("--- recording started ---")
     if writefile then 
-        writefile(file_name, "-- strat\n\n") 
+        writefile(file_name, "-- strat recorded\n\n") 
     end
 end)
 
@@ -221,4 +293,4 @@ close_btn.MouseButton1Click:Connect(function()
     screen_gui:Destroy()
 end)
 
-add_log("we hate pawlette and_we love kingpingling")
+add_log("recorder Ready")
