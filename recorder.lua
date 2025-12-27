@@ -280,23 +280,23 @@ start_btn.MouseButton1Click:Connect(function()
     add_log("--- recording started ---")
     if writefile then 
         local config_content = [[-- CONFIGURATION 
-        _G.AutoStrat = true
-        _G.AutoSkip = false -- Change this to true if you want it to auto skip all waves
-        _G.AutoSnowballs = false -- Change this to true if you want it to automatically collect Snowballs
+_G.AutoStrat = true
+_G.AutoSkip = false -- Change this to true if you want it to auto skip all waves
+_G.AutoSnowballs = false -- Change this to true if you want it to automatically collect Snowballs
 
-        -- WEBHOOK SETTINGS 
-        _G.SendWebhook = false -- Set to true to enable notifications
-        _G.Webhook = "YOUR-WEBHOOK-URL-HERE" 
+-- WEBHOOK SETTINGS 
+_G.SendWebhook = false -- Set to true to enable notifications
+_G.Webhook = "YOUR-WEBHOOK-URL-HERE" 
 
-        -- INITIALIZE LIBRARY 
-        local TDS = loadstring(game:HttpGet("https://raw.githubusercontent.com/DuxiiT/auto-strat/refs/heads/main/Library.lua"))()
+-- INITIALIZE LIBRARY 
+local TDS = loadstring(game:HttpGet("https://raw.githubusercontent.com/DuxiiT/auto-strat/refs/heads/main/Library.lua"))()
 
-        -- START STRATEGY 
-        TDS:Loadout("Mercenary Base", "Military Base", "Engineer", "Ranger", "Accelerator") -- Change this to the loadout you are using
-        TDS:Mode("Hardcore") -- Change this to the gamemode you're playing
-        TDS:GameInfo("Wrecked Battlefield", {}) -- Change this to the Map you want
+-- START STRATEGY 
+TDS:Loadout("Mercenary Base", "Military Base", "Engineer", "Ranger", "Accelerator") -- Change this to the loadout you are using
+TDS:Mode("Hardcore") -- Change this to the gamemode you're playing
+TDS:GameInfo("Wrecked Battlefield", {}) -- Change this to the Map you want
 
-        -- START STRATEGY
+-- START STRATEGY
         ]]
 
         writefile(file_name, config_content)
