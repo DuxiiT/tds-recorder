@@ -282,7 +282,7 @@ start_btn.MouseButton1Click:Connect(function()
         local config_content = [[-- CONFIGURATION 
 _G.AutoStrat = true
 _G.AutoSkip = false -- Change this to true if you want it to auto skip all waves
-_G.AutoSnowballs = false -- Change this to true if you want it to automatically collect Snowballs
+_G.AutoPickups = false -- Change this to true if you want it to automatically collect Snowballs
 
 -- WEBHOOK SETTINGS 
 _G.SendWebhook = false -- Set to true to enable notifications
