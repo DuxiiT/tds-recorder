@@ -142,9 +142,20 @@ end
 workspace_service.Towers.ChildAdded:Connect(function(tower)
     if not _G.record_strat then return end
     task.wait(0.1) 
-    placement_count = placement_count + 1
-    towers_list[tower] = placement_count
-    tower.Name = tostring(placement_count) 
+
+    local is_owner = false
+    for _, sub_child in ipairs(tower:GetChildren()) do
+        if sub_child.Name == "Owner" and sub_child.Value == local_player.UserId then
+            is_owner = true
+            break
+        end
+    end
+
+    if is_owner then
+        placement_count = placement_count + 1
+        towers_list[tower] = placement_count
+        tower.Name = tostring(placement_count) 
+    end
 end)
 
 local old_namecall
