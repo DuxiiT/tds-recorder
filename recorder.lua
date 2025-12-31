@@ -8,6 +8,7 @@ local file_name = "Strat.txt"
 local placement_count = 0
 local last_action_time = tick()
 local towers_list = {} 
+local pending_placement = nil
 _G.record_strat = false
 
 local screen_gui = Instance.new("ScreenGui")
@@ -141,23 +142,22 @@ end
 
 workspace_service.Towers.ChildAdded:Connect(function(tower)
     if not _G.record_strat then return end
+    
     task.wait(0.1) 
+    
+    placement_count = placement_count + 1
+    towers_list[tower] = placement_count
+    tower.Name = tostring(placement_count) 
 
-    local is_owner = false
-    for _, sub_child in ipairs(tower:GetChildren()) do
-        if sub_child.Name == "Owner" and sub_child.Value == local_player.UserId then
-            is_owner = true
-            break
-        end
-    end
-
-    if is_owner then
-        placement_count = placement_count + 1
-        towers_list[tower] = placement_count
-        tower.Name = tostring(placement_count) 
+    if pending_placement then
+        local p = pending_placement
+        record_action(string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", p.Type, p.Pos.X, p.Pos.Y, p.Pos.Z))
+        add_log("placed: " .. p.Type)
+        pending_placement = nil
     end
 end)
 
+-- METAMETHOD HOOK
 local old_namecall
 old_namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
@@ -172,9 +172,10 @@ old_namecall = hookmetamethod(game, "__namecall", function(self, ...)
             local place_data = args[3]
             
             if type(place_data) == "table" and place_data.Position then
-                local pos = place_data.Position
-                record_action(string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", tower_type, pos.X, pos.Y, pos.Z))
-                task.spawn(function() add_log("placed: " .. tower_type) end)
+                pending_placement = {
+                    Type = tower_type,
+                    Pos = place_data.Position
+                }
             end
 
         -- UPGRADE
