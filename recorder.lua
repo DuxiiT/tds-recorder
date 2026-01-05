@@ -130,13 +130,9 @@ end
 
 local function record_action(command_str)
     if not _G.record_strat then return end
-    local current_time = tick()
-    local time_diff = current_time - last_action_time
-    last_action_time = current_time
     
-    local wait_line = string.format("task.wait(%.2f)\n", time_diff)
     if appendfile then
-        appendfile(file_name, wait_line .. command_str .. "\n")
+        appendfile(file_name, command_str .. "\n")
     end
 end
 
@@ -291,7 +287,7 @@ start_btn.MouseButton1Click:Connect(function()
     
     add_log("--- recording started ---")
     if writefile then 
-        local config_content = [[
+        local config_content = [[-- CONFIGURATION 
 -- INITIALIZE LIBRARY 
 local TDS = loadstring(game:HttpGet("https://raw.githubusercontent.com/DuxiiT/auto-strat/refs/heads/main/Library.lua"))()
 
