@@ -139,20 +139,23 @@ end
 workspace_service.Towers.ChildAdded:Connect(function(tower)
     if not _G.record_strat then return end
     
-    task.wait(0.1) 
+    local owner_val = tower:WaitForChild("Owner", 15)
     
-    placement_count = placement_count + 1
-    towers_list[tower] = placement_count
-    tower.Name = tostring(placement_count) 
+    if owner_val and owner_val:IsA("NumberValue") then
+        if tonumber(owner_val.Value) == player.UserId then
+            placement_count = placement_count + 1
+            towers_list[tower] = placement_count
+            tower.Name = tostring(placement_count) 
 
-    if pending_placement then
-        local p = pending_placement
-        record_action(string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", p.Type, p.Pos.X, p.Pos.Y, p.Pos.Z))
-        add_log("placed: " .. p.Type)
-        pending_placement = nil
+            if pending_placement then
+                local p = pending_placement
+                record_action(string.format("TDS:Place(\"%s\", %.2f, %.2f, %.2f)", p.Type, p.Pos.X, p.Pos.Y, p.Pos.Z))
+                add_log("placed: " .. p.Type .. " (ID: " .. placement_count .. ")")
+                pending_placement = nil
+            end
+        end
     end
 end)
-
 -- METAMETHOD HOOK
 local old_namecall
 old_namecall = hookmetamethod(game, "__namecall", function(self, ...)
