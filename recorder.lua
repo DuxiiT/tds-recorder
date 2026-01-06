@@ -308,11 +308,18 @@ end)
 
 stop_btn.MouseButton1Click:Connect(function()
     _G.record_strat = false
+    
+    towers_list = {}
+    placement_count = 0
+    pending_placement = nil
     add_log("--- recording stopped ---")
 end)
 
 close_btn.MouseButton1Click:Connect(function()
     _G.record_strat = false
+    
+    towers_list = {}
+    placement_count = 0
     screen_gui:Destroy()
 end)
 
